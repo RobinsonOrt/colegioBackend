@@ -5,7 +5,7 @@ exports.createStudent = (req, res) =>{
     const student = new Student(req.body)
     student.save((err, data)=>{
         if(err){
-            return res.status(400).json({
+            return res.status(200).json({
                 error: errorHandler(err)
             })
         }
@@ -21,5 +21,13 @@ exports.listStudents = (req, res) => {
             })
         }
         res.json(data);
+    })
+}
+
+exports.remove = (req, res) =>{
+    Student.findByIdAndDelete(req.params.solicitudId, (err)=>{
+        if(err){
+            console.log(err)
+        }
     })
 }

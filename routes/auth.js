@@ -4,12 +4,7 @@ const Joi = require('@hapi/joi');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-const schemaRegister = Joi.object({
-    name: Joi.string().min(3).max(255).required(),
-    email: Joi.string().min(6).max(255).required().email(),
-    password: Joi.string().min(6).max(1024).required(),
-    rol: Joi.string().required()
-})
+
 
 const schemaLogin = Joi.object({
     email: Joi.string().min(6).max(255).required().email(),
@@ -19,60 +14,36 @@ const schemaLogin = Joi.object({
 router.post('/login', async (req, res) =>{
     const {error} = schemaLogin.validate(req.body)
     if (error){
-        return res.status(400).json({error: error.details[0].message})
+        return res.json({error: true, mensaje: error.details[0].message})
     }
 
     const user = await User.findOne({email: req.body.email})
-    if(!user) return res.status(400).json({error: true, mensaje: 'Email NO registrado'})
+    if(!user) return res.json({error: true, mensaje: 'Email o contraseña incorrectos'})
 
     const validPassword = await bcrypt.compare(req.body.password, user.password)
-    if(!validPassword) return res.status(400).json({error: true, mensaje: 'Contraseña incorrecta'})
-
+    if(!validPassword) return res.json({error: true, mensaje: 'Email o contraseña incorrectos'})
+    var secretWord;
+    if(user.rol==1){
+        secretWord = process.env.JWT_SECRET_DIR;
+    }else if(user.rol==2){
+        secretWord = process.env.JWT_SECRET_STU;
+    }
+    
     const token = jwt.sign({
         name: user.name,
         id: user._id,
-        rol: user.rol
-    }, process.env.JWT_SECRET)
+        rol: user.rol,
+        studentAccept: user.studentAccept
+    }, secretWord)
 
+    const userRol = parseInt(user.rol, 10);
+    const userName = user.name;
+    const studentAccept = user.studentAccept;
     
     res.header('auth-token', token).json({
         error: null,
-        data: {token}
+        data: {token, userRol, userName, studentAccept}
     })
-})
-
-router.post('/register', async(req, res)=>{
-
-    const {error} = schemaRegister.validate(req.body)
-    if (error){
-        return res.status(400).json({error: error.details[0].message})
-    }
-
-    const repeatEmail = await User.findOne({email: req.body.email})
-    if(repeatEmail) return res.status(400).json({error: true, mensaje: 'Email ya registrado'})
-
-    const salt = await bcrypt.genSalt(10);
-    const password = await bcrypt.hash(req.body.password, salt)
-
-    const user = new User({
-        name: req.body.name,
-        email: req.body.email,
-        password: password,
-        rol: req.body.rol
-    })
-
-    try {
-        const userDB = await user.save();
-        res.json({
-            error: null,
-            data: userDB
-        })
-
-    } catch (error) {
-        res.status(400).json(error)
-    }
-
-    
 })
 
 module.exports = router;

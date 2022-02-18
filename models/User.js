@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { ObjectId } = mongoose.Schema;
 
 const userSchema = mongoose.Schema({
     name:{
@@ -26,6 +27,11 @@ const userSchema = mongoose.Schema({
     rol:{
         type: String,
         required: true,
+    },
+    studentAccept:{
+        type: ObjectId,
+        ref: "StudentAccept",
+        required: false,
     }
 })
 

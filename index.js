@@ -4,6 +4,7 @@ const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const verifyToken = require('./middlewares/validate-token');
+const verifyTokenStudent = require('./middlewares/validate-tokenStudent');
 
 
 
@@ -23,9 +24,15 @@ mongoose.connect(process.env.DATABASE, {
 }).then( ()=> {console.log("Base de datos conectada")})
 
 //Routes setup
-app.get('/hey', (req, res) => res.send('ho!'));
-app.use('/api/student', verifyToken, require('./routes/student'));
+app.use('/api/student', require('./routes/student'));
+app.use('/api/liststudent',verifyToken, require('./routes/listStudent'));
 app.use('/api/user', require('./routes/auth'));
+app.use('/api/usercreate', verifyToken,require('./routes/register'));
+app.use('/api/studentaccept',require('./routes/studentAccept'));
+app.use('/api/studentacc',require('./routes/studentAcceptForStu'));
+app.use('/api/grade', require('./routes/grade'));
+app.use('/api/course', require('./routes/course'));
+app.use('/api/score', require('./routes/score'));
 
 //Listen port
 const port = process.env.PORT;
